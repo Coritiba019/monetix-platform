@@ -1,0 +1,47 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:17
+    container_name: monetix-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: monetix
+      POSTGRES_USER: monetix
+      POSTGRES_PASSWORD: monetix
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - monetix-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U monetix -d monetix"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: monetix-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    networks:
+      - monetix-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+networks:
+  monetix-net:
+    driver: bridge
+
+volumes:
+  pgdata:
+  redisdata:
